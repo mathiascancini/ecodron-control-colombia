@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EcoDron Control Colombia · Reportes ambientales nacionales</title>
+<link rel="preconnect" href="https://unpkg.com"><link rel="preconnect" href="https://tile.openstreetmap.org">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/esri-leaflet@3.0.19/dist/esri-leaflet.js" crossorigin=""></script>
+<style>
+:root{--green:#167653;--dark:#123d30;--bg:#f3f7f4;--line:#e2eae5;--muted:#6c7c74;--red:#d94f4f;--orange:#e7a037}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#1a352b;font:14px "Segoe UI",Arial,sans-serif}.app{display:grid;grid-template-columns:225px 1fr;min-height:100vh}.side{background:var(--dark);color:white;padding:24px 15px;display:flex;flex-direction:column;gap:26px}.brand{font-size:20px;font-weight:800;display:flex;gap:10px;align-items:center}.logo{background:#dff4e8;color:var(--green);border-radius:12px;padding:10px;font-size:22px}.brand small{display:block;color:#acd0bd;font-size:10px;letter-spacing:1.5px;margin-top:3px}.navtitle{font-size:10px;color:#9ac0ae;letter-spacing:1.5px;margin:0 8px 10px}.nav{display:grid;gap:6px}.nav button{background:none;border:0;color:#d5e6dd;padding:12px;border-radius:9px;text-align:left;cursor:pointer}.nav button:hover,.nav button.active{background:#285b46;color:white}.sidefoot{margin-top:auto;color:#a8c9b8;font-size:12px;line-height:1.5;border-top:1px solid #2d5a48;padding-top:16px}main{padding:28px;min-width:0}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}.eyebrow{font-size:11px;color:var(--green);font-weight:800;letter-spacing:1.6px;text-transform:uppercase}.top h1{margin:6px 0 0;font-size:28px;letter-spacing:-.7px}.date{background:white;border:1px solid var(--line);padding:10px 12px;border-radius:10px;color:var(--muted);font-size:12px}.notice{padding:11px 13px;background:#fff7e8;border:1px solid #f0dfb7;color:#775b25;border-radius:10px;font-size:12px;line-height:1.5;margin-bottom:17px}.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:17px}.stat,.panel{background:white;border:1px solid var(--line);border-radius:14px;overflow:hidden}.stat{padding:16px}.statlabel{color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:5px}.statnum{font-size:27px;font-weight:800;margin:12px 0 5px}.hint{font-size:11px;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.8fr);gap:16px}.panel{margin-bottom:16px}.ph{padding:17px 18px 13px;display:flex;justify-content:space-between;align-items:center;gap:10px}.ph h2{font-size:16px;margin:0}.ph p{margin:5px 0 0;color:var(--muted);font-size:12px}.pill{background:#e7f5ec;color:var(--green);font-size:11px;padding:6px 9px;border-radius:20px;white-space:nowrap}.maptools{padding:0 17px 12px;display:flex;gap:8px;flex-wrap:wrap}.maptools select,.maptools button,.btn{border:1px solid var(--line);background:white;border-radius:8px;padding:9px 10px;font-size:12px;cursor:pointer;color:#234336}.btn.primary,.maptools button.primary{background:var(--green);color:white;border-color:var(--green)}#map{height:560px;width:100%;background:#eaf0f3;position:relative;z-index:1}.mapfallback{height:100%;width:100%;display:grid;place-items:center;background:#e6efe5}.mapfallback svg{height:100%;width:100%;display:block}
+.map-location-picker{margin:0 17px 8px;padding:13px;background:#f4faf6;border:1px solid #d7e8dd;border-radius:11px}
+.map-location-title{display:flex;flex-wrap:wrap;gap:5px 12px;align-items:baseline;margin-bottom:10px}.map-location-title strong{font-size:13px;color:#174b37}.map-location-title span,.map-location-help{font-size:11px;color:var(--muted)}
+.map-location-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.map-location-fields label{display:grid;gap:5px;font-size:11px;font-weight:700;color:#234336}.map-location-fields select,.map-location-fields input{width:100%;min-width:0;padding:9px;border:1px solid var(--line);border-radius:8px;background:white;font:inherit;font-size:12px}.map-location-help{margin:9px 0 0;line-height:1.4}
+@media(max-width:620px){.map-location-fields{grid-template-columns:1fr}.map-location-picker{margin-left:10px;margin-right:10px}}
+.city-quicklist{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:10px 0 4px}
+.city-quicklist strong{font-size:13px;margin-right:4px}
+.city-quicklist button{border:1px solid #cbded3;background:#f6fbf7;color:#174b37;border-radius:18px;padding:7px 11px;font-size:12px;cursor:pointer}
+.city-quicklist button:hover,.city-quicklist button:focus{background:#167653;color:#fff}
+.city-selected-info{font-size:12px;color:#466557;padding:5px 0 9px;min-height:18px}
+#colombiaSvg .city-label{font-size:12px;fill:#173f2e;font-weight:800;paint-order:stroke;stroke:#e2efd9;stroke-width:3px;stroke-linejoin:round}
+#colombiaSvg .city-dot{fill:#e46d2e;stroke:#fff;stroke-width:2.5}
+#colombiaSvg .city-marker.selected .city-dot{fill:#167653;stroke:#fff;stroke-width:4}
+
+#colombiaSvg .city-marker{cursor:pointer;outline:none}
+#colombiaSvg .city-dot{fill:#167653;stroke:#fff;stroke-width:2}
+#colombiaSvg .city-label{font-size:10px;fill:#244d3c;font-weight:700;paint-order:stroke;stroke:#d7e8cb;stroke-width:2px;stroke-linejoin:round}
+#colombiaSvg .city-marker.selected .city-dot{fill:#df6a31;r:9;stroke-width:3}
+#colombiaSvg .city-marker:focus .city-dot{stroke:#f4a340;stroke-width:4}
+.mapmsg{display:none!important}.legend{display:flex;gap:12px;flex-wrap:wrap;padding:12px 17px;font-size:11px;color:var(--muted)}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}.form{padding:0 17px 18px;display:grid;gap:10px}.form label{display:grid;gap:5px;font-size:12px;font-weight:700}.form input,.form select,.form textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:12px;background:white}.form textarea{min-height:65px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.gpsstatus{background:#edf7f0;border:1px solid #cfe8d8;border-radius:9px;padding:10px;font-size:12px;line-height:1.5}.list{padding:0 17px 10px}.report{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}.reporticon{width:38px;height:38px;border-radius:10px;background:#eef4ef;display:grid;place-items:center;font-size:20px}.report strong{font-size:12px;display:block;margin-bottom:4px}.report small{font-size:11px;color:var(--muted)}.badge{font-size:10px;font-weight:700;border-radius:7px;padding:6px 7px;white-space:nowrap}.urgent{background:#ffeded;color:#b73c3c}.pending{background:#fff4df;color:#956516}.done{background:#e5f6ec;color:#18714f}.truckrow,.alertrow{display:flex;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}.miniicon{width:37px;height:37px;display:grid;place-items:center;border-radius:10px;background:#edf3ff;font-size:19px}.truckinfo{flex:1}.truckinfo strong,.alertrow strong{font-size:12px;display:block;margin-bottom:4px}.truckinfo small,.alertrow small{font-size:11px;color:var(--muted)}.rightpad{padding:0 17px 12px}.photos{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 17px 17px}.photo{height:100px;border-radius:10px;background:linear-gradient(145deg,#d8e8d7,#89ae8d);display:grid;place-items:center;font-size:30px;position:relative}.photo:nth-child(2){background:linear-gradient(145deg,#e7e0c9,#a8b990)}.photo:nth-child(3){background:linear-gradient(145deg,#d3e8e9,#84b0ac)}.photo:nth-child(4){background:linear-gradient(145deg,#e9dfca,#b8a887)}.photo span{position:absolute;bottom:6px;left:6px;background:#123d30dd;color:white;font-size:10px;padding:5px 6px;border-radius:5px}.footer{text-align:center;color:#829188;font-size:11px;padding:6px 0 18px}
+@media(max-width:980px){.app{grid-template-columns:180px 1fr}.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}main{padding:18px}}
+@media(max-width:620px){.app{display:block}.side{padding:12px;gap:12px}.sidefoot,.navtitle{display:none}.nav{display:flex;overflow-x:auto}.nav button{white-space:nowrap;padding:9px}.top{align-items:flex-start;flex-direction:column}.top h1{font-size:24px}.date{display:none}main{padding:12px}.stats{gap:8px}.stat{padding:12px}.statnum{font-size:24px}#map{height:370px}.row{grid-template-columns:1fr}}
+
+/* Oculta la franja blanca que cruzaba el mapa. */
+#mapMessage.mapmsg{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+ <div class="brand"><div class="logo">♻</div><div>EcoDron<small>COBERTURA NACIONAL · COLOMBIA</small></div></div>
+ <div><p class="navtitle">PANEL PRINCIPAL</p><nav class="nav">
+  <button class="active" data-target="inicio">▦ Resumen</button><button data-target="mapaseccion">🗺 Mapa de Colombia</button><button data-target="formulario">📍 Reportar basura</button><button data-target="fotografias">📷 Fotografías</button><button data-target="camiones">🚛 Camiones</button><button data-target="alertas">⚠ Alertas</button>
+ </nav></div>
+ <div class="sidefoot">● Sistema de demostración<br>Mapa y datos ilustrativos; reportes nuevos se guardan en este navegador.</div>
+</aside>
+<main id="inicio">
+ <div class="top"><div><div class="eyebrow">Gestión ambiental ciudadana</div><h1>EcoDron Control Colombia</h1></div><div class="date" id="date">Colombia · Gestión ambiental</div></div>
+ <div class="notice"><b>Cobertura nacional:</b> explora Colombia y registra problemas ambientales por departamento, municipio, barrio y calle. Los marcadores y vehículos de ejemplo son demostrativos. Los reportes nuevos se guardan solo en este navegador; para compartirlos con otras personas se necesita un servidor.</div>
+ <section class="stats">
+  <div class="stat"><div class="statlabel">Reportes registrados <span>📍</span></div><div class="statnum" id="countReports">12</div><div class="hint">Incluye reportes de demostración</div></div>
+  <div class="stat"><div class="statlabel">Fotografías de ejemplo <span>📷</span></div><div class="statnum">4</div><div class="hint">Vistas ilustrativas</div></div>
+  <div class="stat"><div class="statlabel">Residuos estimados <span>♻️</span></div><div class="statnum" id="totalKg">139 kg</div><div class="hint">Estimación de demostración</div></div>
+  <div class="stat"><div class="statlabel">Puntos urgentes <span>⚠️</span></div><div class="statnum" id="urgentCount">5</div><div class="hint">Necesitan atención</div></div>
+ </section>
+ <div class="layout">
+  <div>
+   <section class="panel" id="mapaseccion">
+    <div class="ph"><div><h2>Mapa interactivo de Colombia</h2><p>Explora municipios y calles; los barrios dependen de los datos cartográficos disponibles</p></div><span class="pill">🇨🇴 Cobertura nacional</span></div>
+    <select id="citySelect" aria-label="Compatibilidad de navegación" style="display:none"><option value="all" selected>Todo Colombia</option></select>
+    <div class="maptools map-location-fields" aria-label="Elegir ubicación del mapa">
+     <label>1. Departamento<select id="mapDepartment"><option value="">Cargando departamentos…</option></select></label>
+     <label>2. Municipio<select id="mapMunicipality" disabled><option value="">Elige primero el departamento</option></select></label>
+     <label>3. Barrio / vereda<select id="mapNeighborhood" disabled><option value="">Elige primero el municipio</option></select><input id="mapNeighborhoodOther" maxlength="100" placeholder="Escribe el barrio o vereda" style="display:none"></label>
+     <select id="mapFilter" aria-label="Filtrar mapa"><option value="all">Todos los marcadores</option><option value="urgente">Urgentes</option><option value="pendiente">Pendientes</option><option value="atendido">Atendidos</option><option value="camion">Camiones</option></select><button class="primary" id="resetMap">Ver toda Colombia</button>
+    </div>
+    <p class="map-location-help" id="mapLocationStatus" style="padding:0 17px 10px;margin:0">Cuando selecciones un lugar, el mapa se moverá a esa zona.</p>
+    <div id="map" aria-label="Mapa interactivo de barrios"></div>
+    <div class="mapmsg" id="mapMessage">Cargando el mapa de Colombia…</div>
+
+    <div class="city-quicklist" aria-label="Ciudades para explorar"><strong>Ciudades destacadas:</strong><button type="button" data-cityjump="Bogotá">Bogotá</button><button type="button" data-cityjump="Medellín">Medellín</button><button type="button" data-cityjump="Cali">Cali</button><button type="button" data-cityjump="Barranquilla">Barranquilla</button><button type="button" data-cityjump="Cartagena">Cartagena</button></div>
+    <div class="city-selected-info" id="cityInfo">Selecciona un barrio para acercarte a sus calles. Los puntos son demostrativos y puedes cambiarlos por reportes reales.</div>
+    <div class="legend"><a href="https://www.openstreetmap.org/#map=5/4.5/-73.5" target="_blank" rel="noopener" style="color:#167653;font-weight:700">Abrir mapa de Colombia en otra pestaña ↗</a><span><i class="dot" style="background:#d94f4f"></i>Urgente</span><span><i class="dot" style="background:#e7a037"></i>Pendiente</span><span><i class="dot" style="background:#167653"></i>Atendido</span><span>🚛 Camión simulado</span><span>🔵 Tu GPS</span></div>
+   </section>
+   <section class="panel" id="formulario">
+    <div class="ph"><div><h2>Reportar problema ambiental</h2><p>Reporta desde cualquier departamento, municipio, distrito, vereda o zona rural de Colombia</p></div><span class="pill">Nuevo reporte</span></div>
+    <div class="form">
+     <div class="gpsstatus" id="gpsStatus">📍 Todavía no has consultado tu ubicación. Puedes usar el GPS o elegir coordenadas manualmente.</div>
+     <div class="row"><button class="btn primary" id="getLocation" type="button">◎ Usar mi ubicación GPS</button><button class="btn" id="pickMap" type="button">Elegir punto en el mapa</button></div>
+     <div class="row"><label>Departamento<select id="reportDepartment" required><option value="">Primero elige el departamento</option></select></label><label>Municipio o distrito<select id="reportCity" required disabled><option value="">Elige primero el departamento</option></select></label></div><div class="row"><label>Barrio, vereda o sector (opcional)<select id="reportNeighborhood" disabled><option value="">Elige primero el municipio</option><option value="__other__">Otro / zona rural no listada</option></select><input id="reportNeighborhoodOther" maxlength="100" placeholder="Escribe el barrio, vereda o sector" style="display:none"></label><label>Estado<select id="reportStatus"><option value="urgente">Urgente</option><option value="pendiente" selected>Pendiente</option><option value="atendido">Atendido</option></select></label></div>
+     <div class="row"><label>Latitud<input id="reportLat" type="number" step="any" placeholder="Ej. 6.2442"></label><label>Longitud<input id="reportLon" type="number" step="any" placeholder="Ej. -75.5812"></label></div>
+     <label>Calle, carrera o referencia<input id="reportStreet" maxlength="120" placeholder="Ej. Calle 10 con carrera 5, cerca del parque"></label><label>Descripción del problema<input id="reportTitle" maxlength="100" placeholder="Ej. Bolsas de basura en la esquina"></label>
+     <div class="row"><label>Cantidad estimada (kg)<input id="reportKg" type="number" min="0" step="0.5" value="5"></label><label>Fotografía opcional<input id="reportPhoto" type="file" accept="image/*"></label></div>
+     <div class="row">
+      <button class="btn primary" id="saveReport" type="button">＋ Guardar reporte en este dispositivo</button>
+      <button class="btn" id="copyAndOpenOfficial" type="button">📋 Copiar reporte y abrir formulario oficial</button>
+     </div>
+     <div class="hint">Los reportes guardados aquí permanecen en este navegador. El botón “Copiar reporte y abrir formulario oficial” copia los datos al portapapeles y abre el canal oficial de denuncias ambientales. Allí debes pegar la información, completar los campos que falten y pulsar enviar; EcoDron no envía la denuncia por sí solo.</div>
+    </div>
+   </section>
+   <section class="panel" id="fotografias"><div class="ph"><div><h2>Fotografías de ejemplo</h2><p>Imágenes ilustrativas para el proyecto</p></div></div><div class="photos"><div class="photo">🗑️<span>Zona urbana</span></div><div class="photo">🥤<span>Parque</span></div><div class="photo">♻️<span>Residuos reciclables</span></div><div class="photo">🛍️<span>Espacio público</span></div></div></section>
+   <section class="panel"><div class="ph"><div><h2>Últimos reportes</h2><p>Reportes por municipio, sector, calle y estado</p></div></div><div class="rightpad maptools"><button data-listfilter="all" class="primary">Todos</button><button data-listfilter="urgente">Urgentes</button><button data-listfilter="pendiente">Pendientes</button><button data-listfilter="atendido">Atendidos</button></div><div class="list" id="reportList"></div></section>
+  </div>
+  <div>
+   <section class="panel" id="camiones"><div class="ph"><div><h2>Camiones de limpieza</h2><p>Vehículos ilustrativos, no rastreo en vivo</p></div><span class="pill">4 unidades</span></div><div class="rightpad" id="truckList"></div></section>
+   <section class="panel" id="alertas"><div class="ph"><div><h2>Alertas de limpieza</h2><p>Prioridades demostrativas</p></div></div><div class="rightpad"><div class="alertrow"><div class="miniicon">⚠️</div><div><strong>Prioridad alta</strong><small>Revisar acumulación de residuos en zona urbana.</small></div></div><div class="alertrow"><div class="miniicon">🌊</div><div><strong>Inspeccionar zona cercana al agua</strong><small>Verificar el reporte antes de enviar personal.</small></div></div><div class="alertrow"><div class="miniicon">🚛</div><div><strong>Planificar recorrido</strong><small>Asignar el reporte pendiente a un equipo de limpieza.</small></div></div></div></section>
+   <section class="panel"><div class="ph"><div><h2>Cómo funciona</h2><p>Flujo de información</p></div></div><div class="rightpad"><div class="alertrow"><div class="miniicon">📷</div><div><strong>1. Identificar</strong><small>Una persona registra el residuo y toma una foto.</small></div></div><div class="alertrow"><div class="miniicon">📍</div><div><strong>2. Ubicar</strong><small>El GPS o el mapa aporta coordenadas.</small></div></div><div class="alertrow"><div class="miniicon">🗺️</div><div><strong>3. Visualizar</strong><small>El reporte aparece en el mapa de este navegador.</small></div></div><div class="alertrow"><div class="miniicon">♻️</div><div><strong>4. Atender</strong><small>El estado se actualiza manualmente cuando se limpia.</small></div></div></div></section>
+  </div>
+ </div>
+ <div class="footer">EcoDron Colombia · Proyecto educativo ambiental · Mapa base © Esri / OpenStreetMap</div>
+</main>
+</div>
+<script>
+const cityCoords={"Bogotá":[4.711,-74.0721],"Medellín":[6.2442,-75.5812],"Cali":[3.4516,-76.532],"Barranquilla":[10.9685,-74.7813],"Cartagena":[10.391,-75.4794],"Laureles":[6.2442,-75.5915],"Belén":[6.2315,-75.5906],"Robledo":[6.2768,-75.5990],"Manrique":[6.2750,-75.5520],"Buenos Aires":[6.2390,-75.5550]};
+const reports=[
+ {city:"Laureles",barrio:"Laureles",street:"Carrera 70, zona comercial (referencia de ejemplo)",status:"urgente",lat:6.2448,lon:-75.5904,title:"Bolsas de residuos en la acera",kg:8},
+ {city:"Laureles",barrio:"Laureles",street:"Calle 44, cerca de zona verde (referencia de ejemplo)",status:"pendiente",lat:6.2428,lon:-75.5940,title:"Residuos junto a zona verde",kg:5},
+ {city:"Laureles",barrio:"Laureles",street:"Sector residencial (referencia de ejemplo)",status:"atendido",lat:6.2500,lon:-75.5980,title:"Punto de reciclaje atendido",kg:4},
+ {city:"Belén",barrio:"Belén",street:"Vía residencial (referencia de ejemplo)",status:"pendiente",lat:6.2315,lon:-75.5906,title:"Envases en espacio público",kg:6},
+ {city:"Robledo",barrio:"Robledo",street:"Sector residencial (referencia de ejemplo)",status:"urgente",lat:6.2768,lon:-75.5990,title:"Acumulación de residuos",kg:12},
+ {city:"Manrique",barrio:"Manrique",street:"Vía barrial (referencia de ejemplo)",status:"pendiente",lat:6.2750,lon:-75.5520,title:"Basura cerca de una esquina",kg:7},
+ {city:"Buenos Aires",barrio:"Buenos Aires",street:"Sector barrial (referencia de ejemplo)",status:"atendido",lat:6.2390,lon:-75.5550,title:"Zona de residuos atendida",kg:5}
+];
+// Marcadores adicionales de demostración para que el mapa tenga más puntos visibles.
+// Son ubicaciones simuladas, no reportes reales de basura.
+reports.push(
+ {city:"Laureles",barrio:"Laureles",street:"Punto simulado 1",status:"pendiente",lat:6.2470,lon:-75.5860,title:"Residuos en andén (ejemplo)",kg:3},
+ {city:"Laureles",barrio:"Laureles",street:"Punto simulado 2",status:"urgente",lat:6.2398,lon:-75.5868,title:"Acumulación de bolsas (ejemplo)",kg:9},
+ {city:"Laureles",barrio:"Laureles",street:"Punto simulado 3",status:"atendido",lat:6.2512,lon:-75.5880,title:"Punto limpio atendido (ejemplo)",kg:2},
+ {city:"Laureles",barrio:"Laureles",street:"Punto simulado 4",status:"pendiente",lat:6.2461,lon:-75.5965,title:"Envases en zona verde (ejemplo)",kg:4},
+ {city:"Belén",barrio:"Belén",street:"Punto simulado 1",status:"urgente",lat:6.2265,lon:-75.5970,title:"Residuos acumulados (ejemplo)",kg:10},
+ {city:"Belén",barrio:"Belén",street:"Punto simulado 2",status:"pendiente",lat:6.2350,lon:-75.5845,title:"Basura en la acera (ejemplo)",kg:5},
+ {city:"Belén",barrio:"Belén",street:"Punto simulado 3",status:"atendido",lat:6.2290,lon:-75.5880,title:"Punto atendido (ejemplo)",kg:3},
+ {city:"Robledo",barrio:"Robledo",street:"Punto simulado 1",status:"pendiente",lat:6.2810,lon:-75.6040,title:"Residuos en vía (ejemplo)",kg:6},
+ {city:"Robledo",barrio:"Robledo",street:"Punto simulado 2",status:"urgente",lat:6.2690,lon:-75.5940,title:"Acumulación de residuos (ejemplo)",kg:11},
+ {city:"Manrique",barrio:"Manrique",street:"Punto simulado 1",status:"urgente",lat:6.2800,lon:-75.5480,title:"Bolsas fuera del contenedor (ejemplo)",kg:8},
+ {city:"Manrique",barrio:"Manrique",street:"Punto simulado 2",status:"pendiente",lat:6.2685,lon:-75.5570,title:"Residuos en espacio público (ejemplo)",kg:4},
+ {city:"Buenos Aires",barrio:"Buenos Aires",street:"Punto simulado 1",status:"pendiente",lat:6.2440,lon:-75.5500,title:"Basura en esquina (ejemplo)",kg:5},
+ {city:"Buenos Aires",barrio:"Buenos Aires",street:"Punto simulado 2",status:"atendido",lat:6.2335,lon:-75.5600,title:"Punto de residuos atendido (ejemplo)",kg:3},
+ {city:"Medellín",barrio:"Centro de Medellín",street:"Punto simulado 1",status:"urgente",lat:6.2510,lon:-75.5680,title:"Residuos en zona céntrica (ejemplo)",kg:7},
+ {city:"Medellín",barrio:"Centro de Medellín",street:"Punto simulado 2",status:"pendiente",lat:6.2570,lon:-75.5750,title:"Envases en espacio público (ejemplo)",kg:4}
+);
+// Lote adicional grande de puntos simulados para la demostración escolar.
+// No representan reportes reales; coordenadas repartidas alrededor de sectores de Medellín.
+(function addManyDemoReports(){
+ const areas=[
+  {city:"Laureles",barrio:"Laureles",lat:6.2442,lon:-75.5915},
+  {city:"Belén",barrio:"Belén",lat:6.2315,lon:-75.5906},
+  {city:"Robledo",barrio:"Robledo",lat:6.2768,lon:-75.5990},
+  {city:"Manrique",barrio:"Manrique",lat:6.2750,lon:-75.5520},
+  {city:"Buenos Aires",barrio:"Buenos Aires",lat:6.2390,lon:-75.5550},
+  {city:"Medellín",barrio:"Centro de Medellín",lat:6.2510,lon:-75.5680}
+ ];
+ const states=["pendiente","urgente","pendiente","atendido"];
+ for(let i=0;i<180;i++){
+  const a=areas[i%areas.length];
+  const row=Math.floor(i/areas.length);
+  const dLat=(((row*7+i*3)%19)-9)*0.00125;
+  const dLon=(((row*11+i*5)%21)-10)*0.00135;
+  reports.push({city:a.city,barrio:a.barrio,street:"Punto simulado "+(i+1),status:states[i%states.length],lat:a.lat+dLat,lon:a.lon+dLon,title:"Marcador de residuos de demostración #"+(i+1),kg:2+(i%10)});
+ }
+})();
+
+// Marcadores nacionales SIMULADOS para la demostración escolar.
+// No son denuncias reales. Están repartidos por las regiones de Colombia para
+// que al abrir "Todo Colombia" el mapa no concentre todos los puntos en Medellín.
+const nationalDemoCenters = [
+ {city:"Riohacha",dept:"La Guajira",lat:11.5449,lon:-72.9072},
+ {city:"Santa Marta",dept:"Magdalena",lat:11.2408,lon:-74.1990},
+ {city:"Barranquilla",dept:"Atlántico",lat:10.9685,lon:-74.7813},
+ {city:"Cartagena",dept:"Bolívar",lat:10.3910,lon:-75.4794},
+ {city:"Sincelejo",dept:"Sucre",lat:9.3047,lon:-75.3978},
+ {city:"Montería",dept:"Córdoba",lat:8.7500,lon:-75.8785},
+ {city:"Valledupar",dept:"Cesar",lat:10.4631,lon:-73.2532},
+ {city:"Cúcuta",dept:"Norte de Santander",lat:7.8891,lon:-72.4967},
+ {city:"Bucaramanga",dept:"Santander",lat:7.1193,lon:-73.1227},
+ {city:"Arauca",dept:"Arauca",lat:7.0847,lon:-70.7591},
+ {city:"Medellín",dept:"Antioquia",lat:6.2442,lon:-75.5812},
+ {city:"Quibdó",dept:"Chocó",lat:5.6947,lon:-76.6611},
+ {city:"Manizales",dept:"Caldas",lat:5.0703,lon:-75.5138},
+ {city:"Pereira",dept:"Risaralda",lat:4.8143,lon:-75.6946},
+ {city:"Armenia",dept:"Quindío",lat:4.5339,lon:-75.6811},
+ {city:"Ibagué",dept:"Tolima",lat:4.4389,lon:-75.2322},
+ {city:"Bogotá",dept:"Bogotá D.C.",lat:4.7110,lon:-74.0721},
+ {city:"Villavicencio",dept:"Meta",lat:4.1420,lon:-73.6266},
+ {city:"Yopal",dept:"Casanare",lat:5.3378,lon:-72.3959},
+ {city:"Tunja",dept:"Boyacá",lat:5.5353,lon:-73.3678},
+ {city:"Puerto Carreño",dept:"Vichada",lat:6.1890,lon:-67.4859},
+ {city:"Inírida",dept:"Guainía",lat:3.8653,lon:-67.9239},
+ {city:"San José del Guaviare",dept:"Guaviare",lat:2.5729,lon:-72.6459},
+ {city:"Mitú",dept:"Vaupés",lat:1.2537,lon:-70.2332},
+ {city:"Florencia",dept:"Caquetá",lat:1.6144,lon:-75.6062},
+ {city:"Mocoa",dept:"Putumayo",lat:1.1528,lon:-76.6521},
+ {city:"Pasto",dept:"Nariño",lat:1.2136,lon:-77.2811},
+ {city:"Popayán",dept:"Cauca",lat:2.4448,lon:-76.6147},
+ {city:"Cali",dept:"Valle del Cauca",lat:3.4516,lon:-76.5320},
+ {city:"Buenaventura",dept:"Valle del Cauca",lat:3.8801,lon:-77.0312},
+ {city:"Neiva",dept:"Huila",lat:2.9273,lon:-75.2819},
+ {city:"Leticia",dept:"Amazonas",lat:-4.2153,lon:-69.9406},
+ {city:"San Andrés",dept:"San Andrés y Providencia",lat:12.5847,lon:-81.7006},
+ {city:"Barrancabermeja",dept:"Santander",lat:7.0653,lon:-73.8547},
+ {city:"Turbo",dept:"Antioquia",lat:8.0937,lon:-76.7282},
+ {city:"Soacha",dept:"Cundinamarca",lat:4.5794,lon:-74.2168},
+ {city:"Sogamoso",dept:"Boyacá",lat:5.7143,lon:-72.9339}
+];
+const nationalDemoMarkers = [];
+(function buildNationalDemoMarkers(){
+ const statuses=["pendiente","urgente","pendiente","atendido"];
+ let seed=20261020;
+ const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+ nationalDemoCenters.forEach((c,ci)=>{
+  for(let i=0;i<10;i++){
+   // Dispersión alrededor de cada municipio; solo para visualización demostrativa.
+   const lat=c.lat+(rand()-.5)*0.16;
+   const lon=c.lon+(rand()-.5)*0.18;
+   nationalDemoMarkers.push({...c,lat,lon,status:statuses[(ci+i)%statuses.length],number:nationalDemoMarkers.length+1});
+  }
+ });
+})();
+
+const colors={urgente:"#d94f4f",pendiente:"#e7a037",atendido:"#167653"};
+let map=null,reportLayer=null,truckLayer=null,userMarker=null,usingLeaflet=false,pickNext=false;
+const $=id=>document.getElementById(id);
+function statusText(s){return s==="urgente"?"Urgente":s==="atendido"?"Atendido":"Pendiente"}
+function renderList(){
+ const list=$("reportList");list.innerHTML="";
+ const filter=document.querySelector("[data-listfilter].primary")?.dataset.listfilter||"all";
+ [...reports].slice().reverse().forEach(r=>{if(filter!=="all"&&r.status!==filter)return;
+  const row=document.createElement("div");row.className="report";
+  const ic=document.createElement("div");ic.className="reporticon";ic.textContent="♻️";
+  const detail=document.createElement("div"),title=document.createElement("strong"),small=document.createElement("small");
+  title.textContent=r.title;small.textContent=`${r.barrio||r.city||"Ubicación seleccionada"}${r.street?" · "+r.street:""} · ${r.kg} kg aprox.`;
+  detail.append(title,small);const badge=document.createElement("span");badge.className="badge "+r.status;badge.textContent=statusText(r.status);row.append(ic,detail,badge);list.append(row);
+ });
+ $("countReports").textContent=reports.length;$("urgentCount").textContent=reports.filter(r=>r.status==="urgente").length;
+ $("totalKg").textContent=reports.reduce((s,r)=>s+(Number(r.kg)||0),0)+" kg";
+}
+function renderTrucks(){const items=[["ECO-01","Laureles","Ruta de ejemplo"],["ECO-02","Belén","Ruta de ejemplo"],["ECO-03","Robledo","En espera"],["ECO-04","Manrique","Ruta de ejemplo"]];$("truckList").innerHTML="";
+ items.forEach(([id,city,state])=>{const row=document.createElement("div");row.className="truckrow";const icon=document.createElement("div");icon.className="miniicon";icon.textContent="🚛";const info=document.createElement("div");info.className="truckinfo";const strong=document.createElement("strong");strong.textContent=id;const small=document.createElement("small");small.textContent=city+" · "+state;info.append(strong,small);row.append(icon,info);$("truckList").append(row)});
+}
+function refreshMap(){
+ if(!usingLeaflet)return;
+ reportLayer.clearLayers();truckLayer.clearLayers();
+ const city=$("citySelect").value,filter=$("mapFilter").value;
+ const chosenDept=$("mapDepartment")?.value||"";
+ const chosenMunicipality=$("mapMunicipality")?.value||"";
+ const chosenNeighborhood=$("mapNeighborhood")?.value||"";
+ const hasChosenPlace=!!(chosenMunicipality && chosenNeighborhood && !["__other__","__manual__"].includes(chosenNeighborhood));
+ reports.forEach(r=>{if(city!=="all"&&(r.barrio||r.city)!==city)return;if(filter!=="all"&&filter!=="camion"&&r.status!==filter)return;if(filter==="camion")return;
+  const marker=L.circleMarker([r.lat,r.lon],{radius:8,color:"#fff",weight:2,fillColor:colors[r.status],fillOpacity:1}).addTo(reportLayer);
+  const popup=document.createElement("div");const b=document.createElement("strong");b.textContent=r.title;const p=document.createElement("p");p.textContent=`${r.barrio||r.city} · ${r.street||"Calle por confirmar"} · ${statusText(r.status)} · ${r.kg} kg aprox.`;const note=document.createElement("small");note.textContent="Dato de demostración o reporte local";popup.append(b,p,note);marker.bindPopup(popup);
+ });
+ // Puntos nacionales de demostración: se muestran en el mapa de toda Colombia.
+ // Están claramente identificados como simulados, no como denuncias verificadas.
+ nationalDemoMarkers.forEach(r=>{
+  if(filter!=="all"&&filter!=="camion"&&r.status!==filter)return;
+  if(filter==="camion")return;
+  const marker=L.circleMarker([r.lat,r.lon],{radius:5,color:"#fff",weight:1,fillColor:colors[r.status],fillOpacity:0.9}).addTo(reportLayer);
+  marker.bindPopup(`<strong>Marcador demostrativo #${r.number}</strong><br>${r.city}, ${r.dept}<br>${statusText(r.status)}<br><small>Ubicación simulada; no es una denuncia real.</small>`);
+ });
+ // Exaggerated simulated hotspot around the exact place selected in the location controls.
+ // These are explicitly demo markers, not real-world waste reports.
+ if(hasChosenPlace && filter!=="camion"){
+  const center=map.getCenter();
+  let seed=0;for(const ch of (chosenDept+chosenMunicipality+chosenNeighborhood))seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+  const demoCount=650;
+  for(let i=0;i<demoCount;i++){
+   const angle=rand()*Math.PI*2;
+   // Dense cluster; spread scales with zoom so points stay around the selected area.
+   const spread=0.0015+rand()*0.010;
+   const lat=center.lat+Math.cos(angle)*spread;
+   const lon=center.lng+Math.sin(angle)*spread*1.15;
+   const st=["urgente","pendiente","pendiente","atendido"][i%4];
+   if(filter!=="all"&&filter!==st)continue;
+   const marker=L.circleMarker([lat,lon],{radius:5,color:"#fff",weight:1,fillColor:colors[st],fillOpacity:0.88}).addTo(reportLayer);
+   marker.bindPopup(`Marcador simulado #${i+1}<br>${chosenNeighborhood}, ${chosenMunicipality}<br>${statusText(st)} · ejemplo escolar`);
+  }
+  $("cityInfo").textContent=`Vista de ${chosenNeighborhood}, ${chosenMunicipality}, ${chosenDept}: se muestran ${demoCount} marcadores simulados de demostración.`;
+ }
+ if(filter==="all"||filter==="camion"){
+  [["ECO-01","Laureles"],["ECO-02","Belén"],["ECO-03","Robledo"],["ECO-04","Manrique"]].forEach(([id,c])=>{if(city!=="all"&&city!==c)return;const pos=cityCoords[c];const marker=L.marker([pos[0]+.045,pos[1]+.045]).addTo(truckLayer);marker.bindPopup(id+" · "+c+" · ubicación simulada")});
+ }
+}
+function fitColombia(){if(usingLeaflet)map.fitBounds([[-4.7,-79.5],[13.5,-66.5]],{padding:[18,18],animate:false})}
+let municipalityGeoLayer=null;
+let municipalityFeatures=[];
+let municipalityByName=new Map();
+let selectedMunicipality=null;
+const DANE_SERVICE_URL="https://portalgis.dane.gov.co/mparcgis/rest/services/Divipola/Serv_DIVIPOLA_MGN_2025/FeatureServer";
+const DANE_MUNICIPALITIES_URL=DANE_SERVICE_URL+"/317/query";
+const DANE_MUNICIPALITIES_FALLBACK="https://geoportal.dane.gov.co/mparcgis/rest/services/Divipola/Serv_DIVIPOLA_MGN_2024/FeatureServer/317/query";
+let nationalMunicipalities=[];
+
+function municipalityName(props){
+ const keys=Object.keys(props||{});
+ const key=keys.find(k=>/mpio_cn(m|n)br|municipio|nombre.*mun/i.test(k)) || keys.find(k=>/name/i.test(k));
+ return key ? String(props[key]||"").trim() : "";
+}
+function departmentName(props){
+ const keys=Object.keys(props||{});
+ const key=keys.find(k=>/dpto_cn(m|n)br|departamento|nombre.*dpto/i.test(k));
+ return key ? String(props[key]||"").trim() : "";
+}
+function municipalityStyle(){return {color:"#477c67",weight:0.7,opacity:0.9,fillColor:"#d9e5dc",fillOpacity:0.035};}
+function showMunicipality(feature, layer){
+ const props=feature.properties||{};
+ const name=municipalityName(props)||"Municipio";
+ const dept=departmentName(props);
+ const codeKey=Object.keys(props).find(k=>/mpio_ccdgo|codigo.*mun/i.test(k));
+ const code=codeKey?props[codeKey]:"";
+ layer.bindPopup(`<strong>${name}</strong>${dept?`<br>${dept}`:""}${code?`<br>Código DANE: ${code}`:""}<br><small>Límite municipal: fuente DANE</small>`);
+ layer.on("click",()=>{
+  selectedMunicipality=name;
+  $("citySelect").value=name;
+  $("cityInfo").textContent=`Municipio seleccionado: ${name}${dept?" ("+dept+")":""}${code?" · Código DANE "+code:""}.`;
+  $("mapMessage").textContent=`Seleccionaste ${name}${dept?" — "+dept:""}.`;
+  municipalityGeoLayer.resetStyle();
+  layer.setStyle({color:"#e36b2c",weight:2.5,fillColor:"#f4a261",fillOpacity:0.10});
+ });
+}
+function populateMunicipalitySelector(features){
+ const select=$("citySelect");
+ const names=features.map(f=>municipalityName(f.properties)).filter(Boolean);
+ const unique=[...new Set(names)].sort((a,b)=>a.localeCompare(b,"es"));
+ const existing=new Set([...select.options].map(o=>o.value));
+ unique.forEach(name=>{
+  if(!existing.has(name)){const opt=document.createElement("option");opt.value=name;opt.textContent=name;select.appendChild(opt);}
+ });
+ // Also populate the municipality field in the report form if it exists.
+ const reportSelect=$("reportCity");
+ if(reportSelect){
+  const reportExisting=new Set([...reportSelect.options].map(o=>o.value));
+  unique.forEach(name=>{if(!reportExisting.has(name)){const opt=document.createElement("option");opt.value=name;opt.textContent=name;reportSelect.appendChild(opt);}});
+ }
+}
+function normalizeLocationText(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim().toLocaleLowerCase('es');}
+function canonicalDepartment(value){const key=normalizeLocationText(value);return COLOMBIA_DEPARTMENTS_FALLBACK.find(dep=>normalizeLocationText(dep)===key)||String(value||'').trim();}
+const COLOMBIA_DEPARTMENTS_FALLBACK=[
+ 'Amazonas','Antioquia','Arauca','Atlántico','Bogotá, D.C.','Bolívar','Boyacá','Caldas','Caquetá','Casanare','Cauca','Cesar','Chocó','Córdoba','Cundinamarca','Guainía','Guaviare','Huila','La Guajira','Magdalena','Meta','Nariño','Norte de Santander','Putumayo','Quindío','Risaralda','San Andrés, Providencia y Santa Catalina','Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada'
+];
+function fillDepartmentSelects(departments){
+ [$('reportDepartment'),$('mapDepartment')].forEach(select=>{
+  const previous=select.value;
+  select.innerHTML='<option value="">Selecciona un departamento</option>';
+  departments.forEach(dep=>{const o=document.createElement('option');o.value=dep;o.textContent=dep;select.appendChild(o)});
+  if(departments.includes(previous))select.value=previous;
+ });
+}
+async function loadMunicipalities(){
+ $('mapLocationStatus').textContent='Preparando departamentos de Colombia…';
+ // El selector de departamentos funciona sin conexión; así no queda bloqueado si falla DANE.
+ fillDepartmentSelects(COLOMBIA_DEPARTMENTS_FALLBACK);
+ $('mapMessage').textContent='Departamentos disponibles. Cargando municipios…';
+ $('mapLocationStatus').textContent='Departamentos disponibles. Cargando catálogo de municipios en línea…';
+ const query='?where=1%3D1&outFields=MPIO_CNMBRE,DPTO_CNMBRE&returnGeometry=false&orderByFields=MPIO_CNMBRE&resultRecordCount=2000&f=json';
+ let data=null,lastError=null;
+ const urls=[DANE_MUNICIPALITIES_URL,DANE_MUNICIPALITIES_FALLBACK,
+  'https://geoportal.dane.gov.co/mparcgis/rest/services/Divipola/Serv_DIVIPOLA_MGN_2025/FeatureServer/317/query',
+  'https://www.datos.gov.co/resource/gdxc-w37w.json?$limit=2000&$select=nom_mpio,dpto&$order=nom_mpio'];
+ for(const url of urls){
+  try{
+   const isSocrata=url.includes('datos.gov.co/resource/');
+   const r=await fetch(isSocrata?url:url+query);if(!r.ok)throw new Error('HTTP '+r.status);
+   const d=await r.json();if(d.error)throw new Error(d.error.message||'Error DANE');
+   if(isSocrata){if(!Array.isArray(d)||!d.length)throw new Error('El catálogo llegó vacío');data={features:d.map(a=>({attributes:{MPIO_CNMBRE:a.nom_mpio,DPTO_CNMBRE:a.dpto}}))};}
+   else {if(!Array.isArray(d.features)||!d.features.length)throw new Error('El catálogo llegó vacío');data=d;}
+   break;
+  }catch(e){lastError=e;console.warn('Falló catálogo DANE:',url,e)}
+ }
+ if(data){
+  const features=data.features.map(f=>f.attributes||f.properties||{});
+  nationalMunicipalities=features.map(a=>({
+   municipality:String(a.mpio_cnmbr||a.MPIO_CNMBR||a.MPIO_CNMBR||a.mpio_cnmbre||a.MPIO_CNMBRE||a.nombre||a.NOMBRE||'').trim(),
+   department:canonicalDepartment(a.dpto_cnmbr||a.DPTO_CNMBR||a.dpto_cnmbre||a.DPTO_CNMBRE||a.DPTO_NOMBRE||a.departamento||a.DEPARTAMENTO||'')
+  })).filter(x=>x.municipality&&x.department);
+  // Older DIVIPOLA service gives department codes; map those codes to names when needed.
+  if(!nationalMunicipalities.length){
+   const depByCode={'91':'Amazonas','05':'Antioquia','81':'Arauca','08':'Atlántico','11':'Bogotá, D.C.','13':'Bolívar','15':'Boyacá','17':'Caldas','18':'Caquetá','85':'Casanare','19':'Cauca','20':'Cesar','27':'Chocó','23':'Córdoba','25':'Cundinamarca','94':'Guainía','95':'Guaviare','41':'Huila','44':'La Guajira','47':'Magdalena','50':'Meta','52':'Nariño','54':'Norte de Santander','86':'Putumayo','63':'Quindío','66':'Risaralda','88':'San Andrés, Providencia y Santa Catalina','68':'Santander','70':'Sucre','73':'Tolima','76':'Valle del Cauca','97':'Vaupés','99':'Vichada'};
+   nationalMunicipalities=features.map(a=>({municipality:String(a.MPIO_CNMBR||a.mpio_cnmbre||'').trim(),department:depByCode[String(a.DPTO_CCDGO||a.dpto_ccdgo||'').trim()]})).filter(x=>x.municipality&&x.department);
+  }
+  if(nationalMunicipalities.length){
+   nationalMunicipalities=[...new Map(nationalMunicipalities.map(x=>[x.department+'|'+x.municipality,x])).values()];
+   const actual=[...new Set(nationalMunicipalities.map(x=>x.department))];
+   fillDepartmentSelects([...new Set([...COLOMBIA_DEPARTMENTS_FALLBACK,...actual])].sort((a,b)=>a.localeCompare(b,'es')));
+   nationalMunicipalities.forEach(x=>addMunicipalityOption(x.municipality));
+   $('mapLocationStatus').textContent='Catálogo nacional cargado. Elige departamento, municipio y barrio o vereda.';
+   $('mapMessage').textContent='Municipios de Colombia cargados.';return;
+  }
+ }
+ $('mapMessage').textContent='Departamentos listos; municipios requieren Internet.';
+ $('mapLocationStatus').textContent='La lista de departamentos funciona sin conexión. Conéctate a Internet y recarga para cargar los municipios.';
+ console.warn('No fue posible cargar municipios DANE',lastError);
+}
+function addMunicipalityOption(name){const select=$("citySelect");if(![...select.options].some(o=>o.value===name)){const opt=document.createElement("option");opt.value=name;opt.textContent=name;select.appendChild(opt)}}
+function fillReportMunicipalities(){const dep=$("reportDepartment").value,select=$("reportCity");select.innerHTML='<option value="">Selecciona un municipio</option>';$("reportNeighborhood").innerHTML='<option value="">Elige primero el municipio</option><option value="__other__">Otro / zona rural no listada</option>';select.disabled=!dep;$("reportNeighborhood").disabled=true;if(!dep)return;nationalMunicipalities.filter(x=>normalizeLocationText(x.department)===normalizeLocationText(dep)).sort((a,b)=>a.municipality.localeCompare(b.municipality,"es")).forEach(x=>{const o=document.createElement("option");o.value=x.municipality;o.textContent=x.municipality;select.appendChild(o)})}
+async function loadNeighborhoods(){
+ const dep=$("reportDepartment").value,city=$("reportCity").value,select=$("reportNeighborhood");
+ select.innerHTML='<option value="">Buscando barrios y sectores…</option>';select.disabled=true;
+ if(!dep||!city){select.innerHTML='<option value="">Elige primero el municipio</option><option value="__other__">Otro / zona rural no listada</option>';return;}
+ await populateNeighborhoodChoices(select,dep,city);
+}
+async function populateNeighborhoodChoices(select,dep,city){
+ select.innerHTML='<option value="">Buscando barrios y sectores…</option>';select.disabled=true;
+ const addManualOptions=()=>{if(![...select.options].some(o=>o.value==='__other__')){const o=document.createElement('option');o.value='__other__';o.textContent='Otro / zona rural no listada';select.appendChild(o)}if(![...select.options].some(o=>o.value==='__manual__')){const o=document.createElement('option');o.value='__manual__';o.textContent='Escribir barrio/vereda manualmente…';select.appendChild(o)}};
+ try{
+  // Buscar solo dentro del municipio elegido y descartar resultados cuya dirección
+  // pertenezca a otro municipio. Los barrios dependen de lo que esté cartografiado.
+  const response=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=50&q='+encodeURIComponent(city+', '+dep+', Colombia'));
+  if(!response.ok)throw new Error('No se pudo buscar el municipio');
+  const results=await response.json();
+  select.innerHTML='<option value="">Selecciona barrio o vereda (opcional)</option>';
+  const names=new Set(), wanted=normalizeLocationText(city), wantedDep=normalizeLocationText(dep);
+  results.forEach(item=>{
+    const a=item.address||{};
+    const municipalityFields=[a.city,a.town,a.municipality,a.county,a.city_district,a.village].filter(Boolean).map(normalizeLocationText);
+    const departmentFields=[a.state,a.region].filter(Boolean).map(normalizeLocationText);
+    const municipalityMatches=municipalityFields.some(v=>v===wanted||v.includes(wanted)||wanted.includes(v));
+    const departmentMatches=!departmentFields.length||departmentFields.some(v=>v===wantedDep||v.includes(wantedDep)||wantedDep.includes(v));
+    const name=a.neighbourhood||a.suburb||a.quarter||a.hamlet||a.village||a.locality;
+    if(name&&municipalityMatches&&departmentMatches&&!names.has(name)){
+      names.add(name);const o=document.createElement('option');o.value=name;o.textContent=name;select.appendChild(o);
+    }
+  });
+  // Orden alfabético de los barrios/sectores, dejando primero el texto de ayuda.
+  [...select.options].slice(1).sort((a,b)=>a.textContent.localeCompare(b.textContent,'es',{sensitivity:'base'})).forEach(o=>select.appendChild(o));
+  addManualOptions();
+  if(!names.size){const o=document.createElement('option');o.disabled=true;o.value='';o.textContent='No hay barrios registrados para este municipio; puedes escribirlo';select.insertBefore(o,select.options[1]||null)}
+ }catch(e){select.innerHTML='<option value="">Barrios no disponibles en línea</option>';addManualOptions()}
+ select.disabled=false;
+}
+async function populateMapMunicipalities(){
+ const dep=$("mapDepartment").value,select=$("mapMunicipality");select.innerHTML='<option value="">Selecciona un municipio</option>';select.disabled=!dep;
+ resetMapNeighborhoods();if(!dep)return;
+ nationalMunicipalities.filter(x=>normalizeLocationText(x.department)===normalizeLocationText(dep)).sort((a,b)=>a.municipality.localeCompare(b.municipality,"es")).forEach(x=>{const o=document.createElement('option');o.value=x.municipality;o.textContent=x.municipality;select.appendChild(o)});
+ $("mapLocationStatus").textContent='Departamento: '+dep+'. Ahora elige el municipio.';
+}
+function resetMapNeighborhoods(){const s=$("mapNeighborhood");s.innerHTML='<option value="">Elige primero el municipio</option>';s.disabled=true;$('mapNeighborhoodOther').value='';$('mapNeighborhoodOther').style.display='none'}
+async function loadMapNeighborhoods(){
+ const dep=$("mapDepartment").value,city=$("mapMunicipality").value,select=$("mapNeighborhood");resetMapNeighborhoods();
+ if(!dep||!city)return;
+ select.innerHTML='<option value="">Buscando barrios…</option>';select.disabled=true;
+ await populateNeighborhoodChoices(select,dep,city);
+ select.querySelectorAll('option').forEach(o=>{if(o.value==='__other__')o.textContent='Otro / zona rural no listada';if(o.value==='__manual__')o.textContent='Escribir barrio/vereda manualmente…'});
+ // Keep the map at the selected municipality while optional neighborhood data loads.
+ await locateMapPlace(city+', '+dep+', Colombia',12,'Municipio seleccionado: '+city+', '+dep+'. Ahora puedes elegir un barrio o vereda.');
+ $("mapLocationStatus").textContent='Municipio: '+city+' ('+dep+'). Si el barrio no aparece, puedes escribirlo manualmente.';
+}
+async function locateMapPlace(query,zoom,message){
+ if(!usingLeaflet||!map)return;
+ $("mapLocationStatus").textContent='Buscando ubicación en el mapa…';
+ try{
+  const res=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q='+encodeURIComponent(query));
+  if(!res.ok)throw new Error('Geocodificación no disponible');const arr=await res.json();
+  if(arr.length){const p=arr[0],lat=Number(p.lat),lon=Number(p.lon);if(Number.isFinite(lat)&&Number.isFinite(lon)){if(p.boundingbox&&zoom<=12){const b=p.boundingbox.map(Number);map.fitBounds([[b[0],b[2]],[b[1],b[3]]],{padding:[18,18],maxZoom:zoom,animate:false})}else map.setView([lat,lon],zoom,{animate:false});$("cityInfo").textContent=message;$("mapLocationStatus").textContent=message;return true}}
+  $("mapLocationStatus").textContent='No se encontró el lugar exacto en el catálogo. Prueba otra escritura o navega con el zoom.';
+ }catch(e){$("mapLocationStatus").textContent='No se pudo buscar el lugar en línea. Puedes navegar manualmente por el mapa.'}
+ return false;
+}
+async function selectMapNeighborhood(){
+ const dep=$("mapDepartment").value,city=$("mapMunicipality").value,neighborhood=$("mapNeighborhood").value;
+ const manual=neighborhood==='__other__'||neighborhood==='__manual__';$("mapNeighborhoodOther").style.display=manual?'block':'none';
+ if(!dep||!city)return;
+ if(manual){$("mapLocationStatus").textContent='Escribe el barrio o vereda y pulsa fuera del campo para buscarlo.';return}
+ if(!neighborhood){await locateMapPlace(city+', '+dep+', Colombia',12,'Municipio seleccionado: '+city+', '+dep+'.');return}
+ await locateMapPlace(neighborhood+', '+city+', '+dep+', Colombia',15,'Barrio o sector: '+neighborhood+', '+city+', '+dep+'.');
+}
+function focusMunicipality(name){
+ if(!map)return;
+ if(name==="all"){
+  map.fitBounds([[-4.7,-79.5],[13.5,-66.5]],{padding:[18,18],animate:false});
+  selectedMunicipality=null;
+  $("cityInfo").textContent="Vista nacional: Colombia completa. Acércate o selecciona una ciudad para explorar calles.";
+  return;
+ }
+ const known={"Bogotá":[4.711,-74.0721],"Medellín":[6.2442,-75.5812],"Cali":[3.4516,-76.532],"Barranquilla":[10.9685,-74.7813],"Cartagena":[10.391,-75.4794],"Bucaramanga":[7.1193,-73.1227],"Pereira":[4.8143,-75.6946],"Manizales":[5.0703,-75.5138],"Santa Marta":[11.2408,-74.199],"Villavicencio":[4.142,-73.6266],"Pasto":[1.2136,-77.2811],"Cúcuta":[7.8891,-72.4967]};
+ const pos=known[name]||cityCoords[name];
+ if(pos){selectedMunicipality=name;map.setView(pos,12,{animate:false});$("cityInfo").textContent=`Vista aproximada de ${name}. Acércate para explorar calles y marca el punto exacto del reporte.`;$ ("mapMessage").textContent=`Vista de ${name}.`;}
+ else {$("mapMessage").textContent=`No se encontró una ubicación para ${name}. Usa el mapa para acercarte manualmente.`;}
+}
+function chooseCity(city){
+ $("citySelect").value=city;
+ focusMunicipality(city);
+ $("mapMessage").textContent=`Buscando ${city} en el mapa municipal…`;
+}
+function initLeaflet(){
+ if(!window.L) throw new Error("No se pudo cargar la librería Leaflet. Revisa la conexión a Internet.");
+ map=L.map("map",{preferCanvas:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false,zoomSnap:1,zoomDelta:1,minZoom:4,maxZoom:19,maxBounds:[[-5.5,-82],[14.5,-65]],maxBoundsViscosity:0.8}).setView([4.5,-73.5],5);
+ // Mapa base Esri World Street Map: calles y nombres, sin API key en la URL.
+ // Evita los servidores de teselas OSM que mostraron error 403 en algunos equipos.
+ const streetTiles=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{
+  minZoom:4,
+  maxZoom:19,
+  attribution:'Mapa © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a> | Datos cartográficos de sus proveedores'
+ }).addTo(map);
+ streetTiles.on("tileerror",()=>{
+  $("mapMessage").textContent="El proveedor del mapa no respondió. Comprueba tu conexión a Internet e inténtalo de nuevo.";
+ });
+ streetTiles.on("load",()=>{
+  $("mapMessage").textContent="Mapa cargado. Acércate para explorar calles y zonas urbanas.";
+ });
+ reportLayer=L.layerGroup().addTo(map);
+ truckLayer=L.layerGroup().addTo(map);
+ usingLeaflet=true;
+ refreshMap();
+ map.on("click",e=>{
+  if(!pickNext)return;
+  setCoords(e.latlng.lat,e.latlng.lng);
+  $("gpsStatus").textContent="Punto seleccionado en el mapa. Revisa las coordenadas y guarda el reporte.";
+  pickNext=false;
+  $("formulario").scrollIntoView({behavior:"smooth"});
+ });
+ loadMunicipalities();
+ setTimeout(()=>map.invalidateSize(),250);setTimeout(()=>map.invalidateSize(),1000);setTimeout(()=>map.invalidateSize(),1200);
+}
+function setCoords(lat,lon){$("reportLat").value=Number(lat).toFixed(6);$("reportLon").value=Number(lon).toFixed(6)}
+function addFallbackPoint(lat,lon,title,status){if(usingLeaflet)return;}
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");$(b.dataset.target).scrollIntoView({behavior:"smooth",block:"start"})}));
+$("date").textContent="Colombia · "+new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+
+$("citySelect").addEventListener("change",()=>{
+ const c=$("citySelect").value;
+ if(c==="all"){fitColombia();$("cityInfo").textContent="Vista nacional de Colombia. Selecciona una ciudad o usa el zoom para ubicar una calle.";return;}
+ focusMunicipality(c);
+});
+
+$("mapFilter").addEventListener("change",refreshMap);
+$("mapDepartment").addEventListener("change",populateMapMunicipalities);
+$("mapMunicipality").addEventListener("change",loadMapNeighborhoods);
+$("mapNeighborhood").addEventListener("change",async()=>{await selectMapNeighborhood();refreshMap()});
+$("mapNeighborhoodOther").addEventListener("change",async()=>{const value=$("mapNeighborhoodOther").value.trim();if(value)await locateMapPlace(value+', '+$("mapMunicipality").value+', '+$("mapDepartment").value+', Colombia',15,'Ubicación buscada: '+value+', '+$("mapMunicipality").value+', '+$("mapDepartment").value+'.')});
+$("resetMap").addEventListener("click",()=>{$("citySelect").value="all";$("mapFilter").value="all";fitColombia();refreshMap();$("cityInfo").textContent="Vista nacional de Colombia. Selecciona una ciudad o usa el zoom para ubicar una calle.";});
+
+document.querySelectorAll("[data-cityjump]").forEach(b=>b.addEventListener("click",()=>chooseCity(b.dataset.cityjump)));
+document.querySelectorAll("[data-listfilter]").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll("[data-listfilter]").forEach(x=>x.classList.remove("primary"));b.classList.add("primary");renderList()}));
+$("getLocation").addEventListener("click",()=>{
+ if(!navigator.geolocation){$("gpsStatus").textContent="Este navegador no permite consultar GPS.";return}
+ $("gpsStatus").textContent="Consultando ubicación… permite el acceso si el navegador pregunta.";
+ navigator.geolocation.getCurrentPosition(pos=>{
+  const lat=pos.coords.latitude,lon=pos.coords.longitude;
+  setCoords(lat,lon);
+  $("gpsStatus").textContent=`Ubicación obtenida: ${lat.toFixed(5)}, ${lon.toFixed(5)} (precisión aproximada ${Math.round(pos.coords.accuracy)} m).`;
+  if(usingLeaflet){
+   if(userMarker)map.removeLayer(userMarker);
+   userMarker=L.marker([lat,lon]).addTo(map).bindPopup("Tu ubicación GPS").openPopup();
+   map.setView([lat,lon],14);
+   $("mapMessage").textContent="Tu ubicación GPS aparece en el mapa.";
+  }
+ },err=>{$("gpsStatus").textContent=err.code===1?"Permiso denegado. Permite la ubicación en el navegador.":"No se pudo obtener GPS. Abre la página desde HTTPS o localhost, o elige un punto manualmente."},{enableHighAccuracy:true,timeout:15000,maximumAge:10000});
+});
+$("reportDepartment").addEventListener("change",fillReportMunicipalities);
+$("reportCity").addEventListener("change",loadNeighborhoods);
+$("reportNeighborhood").addEventListener("change",()=>{const v=$("reportNeighborhood").value,other=v==="__other__"||v==="__manual__";$("reportNeighborhoodOther").style.display=other?"block":"none";});
+$("reportCity").addEventListener("change",()=>{
+ const city=$("reportCity").value;
+ if(cityCoords[city] && $("reportDepartment").value==="Antioquia" && city==="Medellín" && !$("reportLat").value && !$("reportLon").value){setCoords(cityCoords[city][0],cityCoords[city][1]);$("gpsStatus").textContent=`Centro aproximado de ${city}. Usa GPS o el mapa para ubicar el punto exacto.`}
+});
+$("pickMap").addEventListener("click",()=>{if(!usingLeaflet){$("gpsStatus").textContent="El mapa aún no termina de cargar. Espera unos segundos e inténtalo de nuevo.";return}pickNext=true;$("gpsStatus").textContent="Haz clic en el mapa para seleccionar las coordenadas del reporte.";$("mapaseccion").scrollIntoView({behavior:"smooth"})});
+$("copyAndOpenOfficial").addEventListener("click",async()=>{
+ const status=$("gpsStatus");
+ const deptSelect=$("reportDepartment"), citySelect=$("reportCity");
+ const title=$("reportTitle").value.trim();
+ if(!deptSelect.value||!citySelect.value){
+   status.textContent="Primero selecciona un departamento y un municipio.";
+   status.scrollIntoView({behavior:"smooth",block:"center"});return;
+ }
+ if(!title){
+   status.textContent="Escribe una descripción del problema antes de continuar.";
+   status.scrollIntoView({behavior:"smooth",block:"center"});$("reportTitle").focus();return;
+ }
+ const neighborhoodSelect=$("reportNeighborhood");
+ const isOther=neighborhoodSelect.value==="__other__"||neighborhoodSelect.value==="__manual__";
+ const otherInput=$("reportNeighborhoodOther");
+ const neighborhood=isOther?(otherInput?.value.trim()||""):(neighborhoodSelect.selectedOptions[0]?.textContent||"No indicado");
+ const summary=[
+  "DENUNCIA AMBIENTAL PREPARADA DESDE ECODRON CONTROL COLOMBIA",
+  "Departamento: "+(deptSelect.selectedOptions[0]?.textContent||deptSelect.value),
+  "Municipio/distrito: "+(citySelect.selectedOptions[0]?.textContent||citySelect.value),
+  "Barrio/vereda/sector: "+(neighborhood||"No indicado"),
+  "Calle o referencia: "+($("reportStreet").value.trim()||"No indicada"),
+  "Descripción: "+title,
+  "Cantidad estimada: "+($("reportKg").value.trim()||"No indicada")+" kg",
+  "Latitud: "+($("reportLat").value.trim()||"No indicada"),
+  "Longitud: "+($("reportLon").value.trim()||"No indicada"),
+  "Fotografía seleccionada: "+($("reportPhoto").files?.[0]?.name||"No adjunta; adjúntala directamente en el portal si corresponde"),
+  "Fecha: "+new Date().toLocaleString("es-CO"),
+  "",
+  "NOTA: EcoDron no radica automáticamente esta denuncia. Debes pegar estos datos en el portal oficial y completar allí el envío."
+ ].join("\n");
+ const officialUrl="https://vital.minambiente.gov.co/SILPA_UT_PRE/QuejasDenuncias/QuejasDenuncias.aspx?Ubic=Ext";
+ // Mostrar siempre el texto para que no se pierda si el navegador bloquea el portapapeles.
+ let box=$("ecodronCopyFallback");
+ if(!box){
+   box=document.createElement("textarea");box.id="ecodronCopyFallback";
+   box.setAttribute("aria-label","Texto de denuncia para copiar y pegar");
+   box.style.cssText="display:block;box-sizing:border-box;width:100%;min-height:220px;margin:12px 0;padding:12px;font:14px/1.5 sans-serif;";
+   const label=document.createElement("p");label.id="ecodronCopyLabel";
+   label.textContent="Tu denuncia preparada (si no se copia automáticamente, selecciónala y cópiala):";
+   status.insertAdjacentElement("afterend",label);label.insertAdjacentElement("afterend",box);
+ }
+ box.value=summary;box.style.display="block";
+ // Abrir el sitio oficial durante el clic del usuario para reducir bloqueos de ventanas emergentes.
+ const officialTab=window.open(officialUrl,"_blank");
+ if(officialTab) officialTab.opener=null;
+ let copied=false;
+ try{
+   if(navigator.clipboard&&window.isSecureContext){
+     await navigator.clipboard.writeText(summary);copied=true;
+   }
+ }catch(e){}
+ if(!copied){
+   box.focus();box.select();
+   try{copied=!!document.execCommand("copy")}catch(e){}
+ }
+ let link=$("ecodronOfficialLink");
+ if(!link){
+   link=document.createElement("a");link.id="ecodronOfficialLink";link.href=officialUrl;
+   link.target="_blank";link.rel="noopener noreferrer";link.textContent="Abrir formulario oficial de denuncias ambientales";
+   link.style.cssText="display:block;margin:10px 0;font-weight:bold;";
+   box.insertAdjacentElement("afterend",link);
+ }
+ if(copied){
+   status.textContent=officialTab
+    ?"Datos copiados al portapapeles. En la pestaña del portal oficial, pega (Ctrl+V) en los campos correspondientes y pulsa el botón de enviar. La denuncia no se envía sola."
+    :"Datos copiados. El navegador bloqueó la pestaña nueva; abre el enlace y pega (Ctrl+V) los datos en el formulario oficial.";
+ }else{
+   status.textContent="El texto completo está en el cuadro de abajo. Haz clic dentro, pulsa Ctrl+A y Ctrl+C; luego abre el portal oficial y pega los datos. Debes enviarlos allí para radicar la denuncia.";
+ }
+ status.scrollIntoView({behavior:"smooth",block:"center"});
+});
+
+$("saveReport").addEventListener("click",()=>{
+ const title=$("reportTitle").value.trim(),street=$("reportStreet").value.trim(),lat=Number($("reportLat").value),lon=Number($("reportLon").value),kg=Number($("reportKg").value)||0;
+ if(!$("reportDepartment").value||!$("reportCity").value){$("gpsStatus").textContent="Selecciona primero el departamento y luego el municipio.";return}
+ if(!title){$("gpsStatus").textContent="Escribe una descripción para el reporte.";return}
+ if(!$("reportLat").value||!$("reportLon").value||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){$("gpsStatus").textContent="Obtén GPS o introduce coordenadas válidas.";return}
+ if(lat< -5.5||lat>13.8||lon< -82||lon> -66){$("gpsStatus").textContent="Las coordenadas parecen estar fuera de Colombia. Compruébalas.";return}
+ const departamento=$("reportDepartment").value.trim(), municipio=$("reportCity").value.trim()||"Municipio por confirmar", barrioRaw=$("reportNeighborhood").value, barrio=(barrioRaw==="__other__"||barrioRaw==="__manual__")?$("reportNeighborhoodOther").value.trim():barrioRaw;const r={department:departamento,municipality:municipio,city:municipio,barrio,street,status:$("reportStatus").value,lat,lon,title,kg,created:new Date().toISOString()};
+ reports.push(r);try{const old=JSON.parse(localStorage.getItem("ecodron_reports_local_v3")||"[]");old.push(r);localStorage.setItem("ecodron_reports_local_v3",JSON.stringify(old))}catch(e){}
+ $("reportTitle").value="";$("reportStreet").value="";$("reportNeighborhood").value="";$("reportNeighborhoodOther").value="";$("reportNeighborhoodOther").style.display="none";renderList();refreshMap();
+ if(usingLeaflet){map.setView([lat,lon],15);L.circleMarker([lat,lon],{radius:10,color:"#fff",weight:2,fillColor:colors[r.status],fillOpacity:1}).addTo(reportLayer).bindPopup(r.title+" · "+statusText(r.status)).openPopup()}
+ $("gpsStatus").innerHTML="<strong>Reporte guardado en este navegador.</strong> Este prototipo no lo ha enviado a una entidad ni lo comparte con otros usuarios. Para un reporte oficial, contacta a la alcaldía o autoridad ambiental de tu municipio.";
+});
+try{const saved=JSON.parse(localStorage.getItem("ecodron_reports_local_v3")||"[]");saved.forEach(r=>{if(r&&Number.isFinite(r.lat)&&Number.isFinite(r.lon)&&r.title)reports.push(r)})}catch(e){}
+renderList();renderTrucks();
+$("mapMessage").textContent="Mapa nacional: acerca el zoom para explorar ciudades, barrios y calles de Colombia.";
+try{
+ if(!window.L) throw new Error("Leaflet no está disponible");
+ initLeaflet();
+}catch(err){
+ console.error(err);
+ $("mapMessage").textContent="No se pudo iniciar el mapa interactivo. Comprueba que tengas Internet y abre el archivo en Chrome o Edge.";
+}
+</script>
+</body></html>
